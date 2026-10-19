@@ -1,2 +1,345 @@
-const PROJECT_URL = "https://bxstzctaoknebtcppcfp.supabase.co";
-const PUBLISHABLE_KEY = "your-publishable-key";
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mehfil & Co | Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 20px; background: #f7f2eb;
+      color: #29221e; font: 16px Arial, sans-serif;
+    }
+    main { max-width: 720px; margin: 20px auto; }
+    h1 { color: #68452f; }
+    .panel {
+      background: white; padding: 20px; margin: 16px 0;
+      border-radius: 14px; box-shadow: 0 3px 14px #0000000d;
+    }
+    input, textarea, select, button {
+      width: 100%; padding: 12px; margin: 7px 0;
+      border: 1px solid #d8cec2; border-radius: 8px;
+      font: inherit;
+    }
+    button {
+      background: #68452f; color: white; border: 0;
+      cursor: pointer; font-weight: bold;
+    }
+    button.secondary { background: #786d63; }
+    button.danger { background: #9a3535; }
+    .event { border-top: 1px solid #e7ded4; padding: 14px 0; }
+    .event img { max-width: 100%; max-height: 220px; object-fit: cover; }
+    .muted { color: #766d65; font-size: 14px; }
+    #app { display: none; }
+    #message { white-space: pre-wrap; overflow-wrap: anywhere; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Mehfil & Co</h1>
+  <p class="muted">Event management admin panel</p>
+  <p id="message" role="status">Connecting…</p>
+
+  <section id="login" class="panel" style="display:none">
+    <h2>Admin Login</h2>
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <section id="app">
+    <div class="panel">
+      <h2 id="formTitle">Add an Event</h2>
+      <form id="eventForm">
+        <input id="eventId" type="hidden">
+        <label for="title">Event title *</label>
+        <input id="title" required maxlength="150">
+        <label for="description">Description</label>
+        <textarea id="description" rows="3"></textarea>
+        <label for="date">Event date</label>
+        <input id="date" type="date">
+        <label for="time">Event time</label>
+        <input id="time" placeholder="e.g. 6:00 PM">
+        <label for="venue">Venue</label>
+        <input id="venue" placeholder="Event location">
+        <label for="poster">Poster image</label>
+        <input id="poster" type="file" accept="image/*">
+        <p class="muted">Choose an image file for the event poster.</p>
+        <label for="status">Event status</label>
+        <select id="status">
+          <option value="draft">Draft (not public)</option>
+          <option value="published">Published (visible on website)</option>
+          <option value="archived">Archived</option>
+        </select>
+        <button type="submit">Save Event</button>
+        <button type="button" class="secondary" id="cancelEdit" style="display:none">Cancel Edit</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>Events</h2>
+      <button type="button" class="secondary" id="refresh">Refresh Events</button>
+      <div id="eventsList">Loading events…</div>
+      <button type="button" class="secondary" id="logout">Sign Out</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const PROJECT_URL = "https://bxstzctaoknebtcppcfp.supabase.co";
+  const PUBLISHABLE_KEY = "sb_publishable_ol8i32LedGKWQeHh5foJwA_so2e665b";
+  const $ = id => document.getElementById(id);
+  const message = text => { $("message").textContent = text; };
+
+  if (!window.supabase ||
+      PROJECT_URL.includes("https://bxstzctaoknebtcppcfp.supabase.co") ||
+      PUBLISHABLE_KEY.includes("sb_publishable_ol8i32LedGKWQeHh5foJwA_so2e665b")) {
+    message("Setup needed: add your Supabase Project URL and Publishable key in the code.");
+    return;
+  }
+
+  const db = window.supabase.createClient(PROJECT_URL, PUBLISHABLE_KEY);
+  let currentUser = null;
+  let currentPosterUrl = null;
+
+  function showLogin() {
+    $("login").style.display = "block";
+    $("app").style.display = "none";
+  }
+
+  function showApp() {
+    $("login").style.display = "none";
+    $("app").style.display = "block";
+  }
+
+  async function verifyAdmin(user) {
+    const { data, error } = await db
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error("This account is not registered as an admin.");
+  }
+
+  async function startSession(user) {
+    currentUser = user;
+    try {
+      await verifyAdmin(user);
+      showApp();
+      message("Signed in. Admin access confirmed.");
+      await loadEvents();
+    } catch (err) {
+      currentUser = null;
+      await db.auth.signOut();
+      showLogin();
+      message("Admin access check failed: " + err.message +
+        " Check the admin_users table and its SELECT policy.");
+    }
+  }
+
+  $("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    message("Signing in…");
+    const { data, error } = await db.auth.signInWithPassword({
+      email: $("email").value.trim(),
+      password: $("password").value
+    });
+    if (error) {
+      message("Login failed: " + error.message);
+      return;
+    }
+    await startSession(data.user);
+  });
+
+  $("logout").addEventListener("click", async () => {
+    await db.auth.signOut();
+    currentUser = null;
+    showLogin();
+    message("You have signed out.");
+  });
+
+  function resetForm() {
+    $("eventForm").reset();
+    $("eventId").value = "";
+    currentPosterUrl = null;
+    $("formTitle").textContent = "Add an Event";
+    $("cancelEdit").style.display = "none";
+  }
+
+  $("cancelEdit").addEventListener("click", resetForm);
+  $("refresh").addEventListener("click", loadEvents);
+
+  $("eventForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    if (!currentUser) return message("Please sign in again.");
+
+    const saveButton = $("eventForm").querySelector('button[type="submit"]');
+    saveButton.disabled = true;
+    message("Saving event…");
+
+    try {
+      let posterUrl = currentPosterUrl;
+      const file = $("poster").files[0];
+
+      if (file) {
+        if (!file.type.startsWith("image/")) {
+          throw new Error("Please choose an image file.");
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error("Please choose an image smaller than 5 MB.");
+        }
+
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = currentUser.id + "/" + Date.now() + "-" + safeName;
+        const { error: uploadError } = await db.storage
+          .from("event-posters")
+          .upload(path, file, { contentType: file.type, upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data } = db.storage.from("event-posters").getPublicUrl(path);
+        posterUrl = data.publicUrl;
+      }
+
+      const event = {
+        title: $("title").value.trim(),
+        description: $("description").value.trim() || null,
+        event_date: $("date").value || null,
+        event_time: $("time").value.trim() || null,
+        venue: $("venue").value.trim() || null,
+        poster_url: posterUrl,
+        status: $("status").value,
+        updated_at: new Date().toISOString()
+      };
+
+      if (!event.title) throw new Error("Enter an event title.");
+
+      const id = $("eventId").value;
+      const result = id
+        ? await db.from("events").update(event).eq("id", id)
+        : await db.from("events").insert(event);
+
+      if (result.error) throw result.error;
+
+      resetForm();
+      message("Event saved successfully.");
+      await loadEvents();
+    } catch (err) {
+      message("Could not save event: " + err.message);
+    } finally {
+      saveButton.disabled = false;
+    }
+  });
+
+  async function loadEvents() {
+    $("eventsList").textContent = "Loading events…";
+    const { data, error } = await db
+      .from("events")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      $("eventsList").textContent = "Could not load events: " + error.message;
+      return;
+    }
+
+    $("eventsList").replaceChildren();
+
+    if (!data.length) {
+      $("eventsList").textContent = "No events yet. Add your first event above.";
+      return;
+    }
+
+    data.forEach(event => {
+      const card = document.createElement("div");
+      card.className = "event";
+
+      const heading = document.createElement("h3");
+      heading.textContent = event.title;
+      card.appendChild(heading);
+
+      const details = document.createElement("p");
+      details.textContent = [
+        event.event_date, event.event_time, event.venue,
+        "Status: " + event.status
+      ].filter(Boolean).join(" • ");
+      card.appendChild(details);
+
+      if (event.description) {
+        const desc = document.createElement("p");
+        desc.textContent = event.description;
+        card.appendChild(desc);
+      }
+
+      if (event.poster_url) {
+        const img = document.createElement("img");
+        img.src = event.poster_url;
+        img.alt = "Poster for " + event.title;
+        img.loading = "lazy";
+        card.appendChild(img);
+      }
+
+      const edit = document.createElement("button");
+      edit.textContent = "Edit Event";
+      edit.addEventListener("click", () => {
+        $("eventId").value = event.id;
+        $("title").value = event.title || "";
+        $("description").value = event.description || "";
+        $("date").value = event.event_date || "";
+        $("time").value = event.event_time || "";
+        $("venue").value = event.venue || "";
+        $("status").value = event.status || "draft";
+        currentPosterUrl = event.poster_url || null;
+        $("formTitle").textContent = "Edit Event";
+        $("cancelEdit").style.display = "block";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      card.appendChild(edit);
+
+      const del = document.createElement("button");
+      del.textContent = "Delete Event";
+      del.className = "danger";
+      del.addEventListener("click", async () => {
+        if (!confirm("Delete this event? This cannot be undone.")) return;
+        const { error: deleteError } = await db
+          .from("events").delete().eq("id", event.id);
+        if (deleteError) {
+          message("Could not delete event: " + deleteError.message);
+          return;
+        }
+        message("Event deleted.");
+        await loadEvents();
+      });
+      card.appendChild(del);
+      $("eventsList").appendChild(card);
+    });
+  }
+
+  (async () => {
+    const { data, error } = await db.auth.getSession();
+    if (error) {
+      showLogin();
+      message("Could not check session: " + error.message);
+      return;
+    }
+    if (data.session) {
+      await startSession(data.session.user);
+    } else {
+      showLogin();
+      message("Please sign in with your admin account.");
+    }
+  })();
+})();
+</script>
+</body>
+</html>
