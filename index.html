@@ -7,42 +7,201 @@
   <meta name="theme-color" content="#f7f4ec">
   <title>Mehfil & Co. | Moments That Bring Us Together</title>
   <meta name="description" content="Discover memorable gatherings, experiences and upcoming events with Mehfil & Co.">
+
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: Georgia, 'Times New Roman', serif; background: #f7f4ec; color: #25291e; }
-    header { padding: 22px 7%; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #dedbcc; }
+    body {
+      margin: 0;
+      font-family: Georgia, 'Times New Roman', serif;
+      background: #f7f4ec;
+      color: #25291e;
+    }
+    header {
+      padding: 22px 7%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #dedbcc;
+    }
     .logo { font-size: 25px; font-weight: bold; letter-spacing: -1px; }
     .logo span { color: #78805a; }
-    nav a { color: #34392b; text-decoration: none; margin-left: 24px; font: 13px Arial, sans-serif; }
+    nav a {
+      color: #34392b;
+      text-decoration: none;
+      margin-left: 24px;
+      font: 13px Arial, sans-serif;
+    }
     .hero { padding: 85px 7% 75px; background: #e9e8d9; }
-    .eyebrow { font: 11px Arial, sans-serif; letter-spacing: 3px; text-transform: uppercase; color: #68704b; }
-    h1 { font-size: clamp(44px, 8vw, 88px); font-weight: normal; line-height: 1.02; max-width: 800px; margin: 25px 0; letter-spacing: -3px; }
+    .eyebrow {
+      font: 11px Arial, sans-serif;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #68704b;
+    }
+    h1 {
+      font-size: clamp(44px, 8vw, 88px);
+      font-weight: normal;
+      line-height: 1.02;
+      max-width: 800px;
+      margin: 25px 0;
+      letter-spacing: -3px;
+    }
     h1 em { color: #78805a; }
-    .intro { max-width: 470px; font: 16px/1.8 Arial, sans-serif; color: #5f6155; }
-    .button { display: inline-block; margin-top: 22px; padding: 15px 24px; background: #343b2b; color: white; text-decoration: none; font: 12px Arial, sans-serif; letter-spacing: 1px; }
+    .intro {
+      max-width: 470px;
+      font: 16px/1.8 Arial, sans-serif;
+      color: #5f6155;
+    }
+    .button {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 14px 22px;
+      background: #343b2b;
+      color: white;
+      text-decoration: none;
+      font: 12px Arial, sans-serif;
+      letter-spacing: 1px;
+      border: 0;
+      cursor: pointer;
+    }
     section { padding: 65px 7%; }
-    .section-title { font-size: 39px; font-weight: normal; margin: 14px 0; }
-    .about { max-width: 660px; font: 15px/1.9 Arial, sans-serif; color: #65665b; }
-    .event { display: grid; grid-template-columns: 1fr 1fr; gap: 35px; align-items: center; margin-top: 30px; }
-    .event-art { min-height: 300px; background: #d8dac6; display: flex; align-items: center; justify-content: center; padding: 30px; text-align: center; }
-    .event-art div { border: 1px solid #81886a; padding: 40px 22px; width: 100%; }
-    .event-art p { font: 11px Arial, sans-serif; letter-spacing: 3px; }
-    .event-art h3 { font-size: 42px; font-weight: normal; margin: 18px 0; }
-    .event-copy p { font: 14px/1.8 Arial, sans-serif; color: #65665b; }
-    .date { color: #78805a !important; font-size: 12px !important; letter-spacing: 2px; text-transform: uppercase; }
-    .note { padding: 24px; background: #eeece2; font: 13px/1.8 Arial, sans-serif; color: #696a60; }
-    footer { padding: 32px 7%; background: #343b2b; color: #f7f4ec; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font: 12px Arial, sans-serif; }
+    .section-title {
+      font-size: 39px;
+      font-weight: normal;
+      margin: 14px 0;
+    }
+    .about {
+      max-width: 660px;
+      font: 15px/1.9 Arial, sans-serif;
+      color: #65665b;
+    }
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      margin-top: 30px;
+    }
+    .event-card {
+      background: #fffdf7;
+      border: 1px solid #dedbcc;
+      overflow: hidden;
+    }
+    .poster {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      display: block;
+      background: #d8dac6;
+    }
+    .poster-placeholder {
+      height: 280px;
+      background: #d8dac6;
+      display: grid;
+      place-items: center;
+      padding: 25px;
+      text-align: center;
+      color: #343b2b;
+      font-size: 30px;
+    }
+    .event-info { padding: 24px; }
+    .date {
+      color: #78805a;
+      font: 12px/1.7 Arial, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .event-info h3 { font-size: 27px; font-weight: normal; margin: 12px 0; }
+    .event-info p {
+      font: 14px/1.8 Arial, sans-serif;
+      color: #65665b;
+      overflow-wrap: anywhere;
+    }
+    .event-meta { font-size: 12px !important; }
+    .empty, .error {
+      padding: 22px;
+      background: #eeece2;
+      font: 14px/1.8 Arial, sans-serif;
+      color: #55594a;
+    }
+    .note {
+      padding: 24px;
+      background: #eeece2;
+      font: 13px/1.8 Arial, sans-serif;
+      color: #696a60;
+    }
+    footer {
+      padding: 32px 7%;
+      background: #343b2b;
+      color: #f7f4ec;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      font: 12px Arial, sans-serif;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .modal.open { display: flex; }
+    .modal-box {
+      background: #fffdf7;
+      width: 100%;
+      max-width: 500px;
+      padding: 26px;
+      max-height: 95vh;
+      overflow-y: auto;
+    }
+    .modal-box h2 { font-size: 29px; font-weight: normal; }
+    .form-field { margin: 16px 0; }
+    .form-field label {
+      display: block;
+      font: 13px Arial, sans-serif;
+      margin-bottom: 7px;
+    }
+    .form-field input, .form-field select {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #c9c8ba;
+      background: white;
+      color: #25291e;
+      font-size: 15px;
+    }
+    .form-message {
+      font: 13px/1.7 Arial, sans-serif;
+      overflow-wrap: anywhere;
+    }
+    .close-button {
+      float: right;
+      border: 0;
+      background: transparent;
+      font-size: 25px;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .55; cursor: wait; }
+
     @media (max-width: 650px) {
       header { padding: 20px 5%; }
       nav a { margin-left: 10px; font-size: 11px; }
       .hero { padding: 65px 6%; }
       section { padding: 50px 6%; }
-      .event { grid-template-columns: 1fr; }
+      .events-grid { grid-template-columns: 1fr; }
       h1 { letter-spacing: -2px; }
       .section-title { font-size: 33px; }
+      .poster, .poster-placeholder { height: 240px; }
     }
   </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
   <header>
     <div class="logo">Mehfil <span>&</span> Co.</div>
@@ -56,38 +215,36 @@
     <div class="hero">
       <div class="eyebrow">Gather. Connect. Celebrate.</div>
       <h1>Some moments<br>deserve to be <em>shared.</em></h1>
-      <p class="intro">A space for people, stories and experiences that bring us closer. Welcome to Mehfil & Co.</p>
+      <p class="intro">
+        A space for people, stories and experiences that bring us closer.
+        Welcome to Mehfil & Co.
+      </p>
       <a class="button" href="#events">DISCOVER OUR EVENTS ↗</a>
     </div>
 
     <section id="about">
       <div class="eyebrow">A little about us</div>
       <h2 class="section-title">More than an event.<br>A feeling.</h2>
-      <p class="about">We believe the best memories begin when people come together. Mehfil & Co. creates spaces for meaningful connections, shared experiences and moments worth remembering.</p>
+      <p class="about">
+        We believe the best memories begin when people come together.
+        Mehfil & Co. creates spaces for meaningful connections, shared
+        experiences and moments worth remembering.
+      </p>
     </section>
 
     <section id="events">
       <div class="eyebrow">Save the date</div>
-      <h2 class="section-title">The next gathering</h2>
-      <div class="event">
-        <div class="event-art">
-          <div>
-            <p>MEHFIL & CO. PRESENTS</p>
-            <h3>You're Invited</h3>
-            <p>31 OCTOBER 2026</p>
-          </div>
-        </div>
-        <div class="event-copy">
-          <p class="date">Saturday · 31 October 2026</p>
-          <h2 class="section-title">Our First Mehfil</h2>
-          <p>Something special is coming. Join us for a gathering made for connection, conversation and memorable moments.</p>
-          <p>Event timing, venue and registration details will be announced soon.</p>
-          <a class="button" href="mailto:hello@mehfilandco.com?subject=Mehfil%20%26%20Co%20Event%20Enquiry">MAKE AN ENQUIRY ↗</a>
-        </div>
+      <h2 class="section-title">Upcoming gatherings</h2>
+      <p class="about">Find your next experience with Mehfil & Co.</p>
+      <div id="events-container" aria-live="polite">
+        <p class="empty">Loading upcoming events...</p>
       </div>
     </section>
+
     <section>
-      <div class="note">Stay connected with Mehfil & Co. More event details will be shared soon.</div>
+      <div class="note">
+        Stay connected with Mehfil & Co. We look forward to celebrating with you.
+      </div>
     </section>
   </main>
 
@@ -95,5 +252,251 @@
     <div>© 2026 Mehfil & Co.</div>
     <div>Made for moments that matter.</div>
   </footer>
+
+  <div class="modal" id="registration-modal" role="dialog"
+       aria-modal="true" aria-labelledby="registration-title">
+    <div class="modal-box">
+      <button class="close-button" type="button" id="close-modal"
+              aria-label="Close registration form">×</button>
+      <h2 id="registration-title">Register for an event</h2>
+      <p id="selected-event-name"></p>
+
+      <form id="registration-form">
+        <input type="hidden" id="event-id">
+
+        <div class="form-field">
+          <label for="full-name">Full name *</label>
+          <input id="full-name" name="full_name" maxlength="100"
+                 autocomplete="name" required>
+        </div>
+
+        <div class="form-field">
+          <label for="email">Email address *</label>
+          <input id="email" name="email" type="email" maxlength="180"
+                 autocomplete="email" required>
+        </div>
+
+        <div class="form-field">
+          <label for="phone">Phone number *</label>
+          <input id="phone" name="phone" type="tel" maxlength="20"
+                 autocomplete="tel" required>
+        </div>
+
+        <div class="form-field">
+          <label for="ticket-count">Number of tickets</label>
+          <select id="ticket-count" name="ticket_count">
+            <option value="1">1 ticket</option>
+            <option value="2">2 tickets</option>
+            <option value="3">3 tickets</option>
+            <option value="4">4 tickets</option>
+          </select>
+        </div>
+
+        <button class="button" id="submit-registration" type="submit">
+          REGISTER NOW
+        </button>
+        <button class="button" type="button" id="cancel-registration"
+                style="background:#777">
+          CANCEL
+        </button>
+        <p class="form-message" id="form-message" role="status"></p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // These are frontend credentials. Never put a secret/service-role key here.
+    const PROJECT_URL = "https://bxstzctaoknebtcppcfp.supabase.co";
+    const PUBLISHABLE_KEY = "sb_publishable_ol8i32LedGKWQeHh5foJwA_so2e665b";
+
+    const supabaseClient = window.supabase.createClient(
+      PROJECT_URL,
+      PUBLISHABLE_KEY
+    );
+
+    const container = document.getElementById("events-container");
+    const modal = document.getElementById("registration-modal");
+    const registrationForm = document.getElementById("registration-form");
+    const message = document.getElementById("form-message");
+    const submitButton = document.getElementById("submit-registration");
+
+    function safeText(value) {
+      return String(value ?? "").replace(/[&<>"']/g, function (character) {
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        }[character];
+      });
+    }
+
+    function displayDate(value) {
+      if (!value) return "Date to be announced";
+      const parsed = new Date(value + "T00:00:00");
+      return Number.isNaN(parsed.getTime())
+        ? safeText(value)
+        : parsed.toLocaleDateString(undefined, {
+            day: "numeric", month: "long", year: "numeric"
+          });
+    }
+
+    async function loadEvents() {
+      container.innerHTML =
+        '<p class="empty">Loading upcoming events...</p>';
+
+      const { data, error } = await supabaseClient
+        .from("events")
+        .select("id,title,description,event_date,event_time,venue,poster_url,status")
+        .eq("status", "published")
+        .order("event_date", { ascending: true });
+
+      if (error) {
+        console.error("Could not load events:", error);
+        container.innerHTML =
+          '<p class="error">We could not load events right now. Please try again later.</p>';
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        container.innerHTML =
+          '<p class="empty">No published events yet. Please check back soon!</p>';
+        return;
+      }
+
+      const grid = document.createElement("div");
+      grid.className = "events-grid";
+
+      data.forEach(function (event) {
+        const card = document.createElement("article");
+        card.className = "event-card";
+
+        const posterUrl = String(event.poster_url || "");
+        const safePosterUrl = /^https:\/\/\S+$/i.test(posterUrl)
+          ? posterUrl : "";
+
+        const posterMarkup = safePosterUrl
+          ? '<img class="poster" src="' + safeText(safePosterUrl) +
+            '" alt="' + safeText(event.title) + ' event poster" loading="lazy">'
+          : '<div class="poster-placeholder">Mehfil &amp; Co.<br>You're Invited</div>';
+
+        card.innerHTML =
+          posterMarkup +
+          '<div class="event-info">' +
+            '<div class="date">' + safeText(displayDate(event.event_date)) + '</div>' +
+            '<h3>' + safeText(event.title) + '</h3>' +
+            '<p>' + safeText(event.description || "") + '</p>' +
+            (event.event_time
+              ? '<p class="event-meta"><strong>Time:</strong> ' +
+                safeText(event.event_time) + '</p>' : '') +
+            (event.venue
+              ? '<p class="event-meta"><strong>Venue:</strong> ' +
+                safeText(event.venue) + '</p>' : '') +
+            '<button class="button register-button" type="button">REGISTER NOW ↗</button>' +
+          '</div>';
+
+        const image = card.querySelector("img.poster");
+        if (image) {
+          image.addEventListener("error", function () {
+            const placeholder = document.createElement("div");
+            placeholder.className = "poster-placeholder";
+            placeholder.textContent = "Mehfil & Co. — You're Invited";
+            image.replaceWith(placeholder);
+          });
+        }
+
+        card.querySelector(".register-button").addEventListener("click", function () {
+          openRegistration(event);
+        });
+
+        grid.appendChild(card);
+      });
+
+      container.replaceChildren(grid);
+    }
+
+    function openRegistration(event) {
+      document.getElementById("event-id").value = event.id;
+      document.getElementById("selected-event-name").textContent = event.title;
+      document.getElementById("registration-title").textContent =
+        "Register for an event";
+      message.textContent = "";
+      submitButton.disabled = false;
+      submitButton.textContent = "REGISTER NOW";
+      modal.classList.add("open");
+    }
+
+    function closeRegistration() {
+      modal.classList.remove("open");
+      message.textContent = "";
+    }
+
+    document.getElementById("close-modal").addEventListener("click", closeRegistration);
+    document.getElementById("cancel-registration").addEventListener("click", closeRegistration);
+
+    modal.addEventListener("click", function (event) {
+      if (event.target === modal) closeRegistration();
+    });
+
+    registrationForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const eventId = document.getElementById("event-id").value;
+      const fullName = document.getElementById("full-name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const ticketCount = Number(document.getElementById("ticket-count").value);
+
+      if (!eventId || !fullName || !email || !phone) {
+        message.textContent = "Please complete all required fields.";
+        return;
+      }
+
+      // The SQL table created earlier defines event_id as BIGINT.
+      const numericEventId = Number(eventId);
+      if (!Number.isSafeInteger(numericEventId) || numericEventId <= 0) {
+        message.textContent =
+          "Registration setup needs checking: the event ID must match the registration table.";
+        return;
+      }
+
+      if (![1, 2, 3, 4].includes(ticketCount)) {
+        message.textContent = "Please select between 1 and 4 tickets.";
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = "SUBMITTING...";
+      message.textContent = "Submitting your registration...";
+
+      const { error } = await supabaseClient
+        .from("event_registrations")
+        .insert([{
+          event_id: numericEventId,
+          full_name: fullName,
+          email: email,
+          phone: phone,
+          ticket_count: ticketCount
+        }]);
+
+      submitButton.disabled = false;
+      submitButton.textContent = "REGISTER NOW";
+
+      if (error) {
+        console.error("Registration failed:", error);
+        message.textContent =
+          "Registration could not be saved. Please try again later.";
+        return;
+      }
+
+      message.textContent =
+        "Thank you! Your registration has been submitted successfully.";
+      registrationForm.reset();
+      document.getElementById("event-id").value = eventId;
+    });
+
+    loadEvents();
+  </script>
 </body>
 </html>
