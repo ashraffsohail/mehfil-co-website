@@ -110,7 +110,11 @@
       letter-spacing: 1px;
       text-transform: uppercase;
     }
-    .event-info h3 { font-size: 27px; font-weight: normal; margin: 12px 0; }
+    .event-info h3 {
+      font-size: 27px;
+      font-weight: normal;
+      margin: 12px 0;
+    }
     .event-info p {
       font: 14px/1.8 Arial, sans-serif;
       color: #65665b;
@@ -122,7 +126,9 @@
       background: #eeece2;
       font: 14px/1.8 Arial, sans-serif;
       color: #55594a;
+      overflow-wrap: anywhere;
     }
+    .error { border-left: 4px solid #a34d3d; }
     .note {
       padding: 24px;
       background: #eeece2;
@@ -237,7 +243,7 @@
       <h2 class="section-title">Upcoming gatherings</h2>
       <p class="about">Find your next experience with Mehfil & Co.</p>
       <div id="events-container" aria-live="polite">
-        <p class="empty">Loading upcoming events...</p>
+        <p class="empty">Connecting to events...</p>
       </div>
     </section>
 
@@ -305,20 +311,21 @@
   </div>
 
   <script>
-    // These are frontend credentials. Never put a secret/service-role key here.
+    // Frontend project URL and publishable key only.
+    // Never place a Supabase secret or service-role key in this file.
     const PROJECT_URL = "https://bxstzctaoknebtcppcfp.supabase.co";
     const PUBLISHABLE_KEY = "sb_publishable_ol8i32LedGKWQeHh5foJwA_so2e665b";
-
-    const supabaseClient = window.supabase.createClient(
-      PROJECT_URL,
-      PUBLISHABLE_KEY
-    );
 
     const container = document.getElementById("events-container");
     const modal = document.getElementById("registration-modal");
     const registrationForm = document.getElementById("registration-form");
     const message = document.getElementById("form-message");
     const submitButton = document.getElementById("submit-registration");
+
+    // Guard against the Supabase CDN failing to load.
+    const supabaseClient = window.supabase
+      ? window.supabase.createClient(PROJECT_URL, PUBLISHABLE_KEY)
+      : null;
 
     function safeText(value) {
       return String(value ?? "").replace(/[&<>"']/g, function (character) {
@@ -338,89 +345,136 @@
       return Number.isNaN(parsed.getTime())
         ? safeText(value)
         : parsed.toLocaleDateString(undefined, {
-            day: "numeric", month: "long", year: "numeric"
+            day: "numeric",
+            month: "long",
+            year: "numeric"
           });
     }
 
     async function loadEvents() {
       container.innerHTML =
-        '<p class="empty">Loading upcoming events...</p>';
+        '<p class="empty">Connecting to events...</p>';
 
-      const { data, error } = await supabaseClient
-        .from("events")
-        .select("id,title,description,event_date,event_time,venue,poster_url,status")
-        .eq("status", "published")
-        .order("event_date", { ascending: true });
-
-      if (error) {
-        console.error("Could not load events:", error);
-        container.innerHTML =
-          '<p class="error">We could not load events right now. Please try again later.</p>';
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        container.innerHTML =
-          '<p class="empty">No published events yet. Please check back soon!</p>';
-        return;
-      }
-
-      const grid = document.createElement("div");
-      grid.className = "events-grid";
-
-      data.forEach(function (event) {
-        const card = document.createElement("article");
-        card.className = "event-card";
-
-        const posterUrl = String(event.poster_url || "");
-        const safePosterUrl = /^https:\/\/\S+$/i.test(posterUrl)
-          ? posterUrl : "";
-
-        const posterMarkup = safePosterUrl
-          ? '<img class="poster" src="' + safeText(safePosterUrl) +
-            '" alt="' + safeText(event.title) + ' event poster" loading="lazy">'
-          : '<div class="poster-placeholder">Mehfil &amp; Co.<br>You're Invited</div>';
-
-        card.innerHTML =
-          posterMarkup +
-          '<div class="event-info">' +
-            '<div class="date">' + safeText(displayDate(event.event_date)) + '</div>' +
-            '<h3>' + safeText(event.title) + '</h3>' +
-            '<p>' + safeText(event.description || "") + '</p>' +
-            (event.event_time
-              ? '<p class="event-meta"><strong>Time:</strong> ' +
-                safeText(event.event_time) + '</p>' : '') +
-            (event.venue
-              ? '<p class="event-meta"><strong>Venue:</strong> ' +
-                safeText(event.venue) + '</p>' : '') +
-            '<button class="button register-button" type="button">REGISTER NOW ↗</button>' +
-          '</div>';
-
-        const image = card.querySelector("img.poster");
-        if (image) {
-          image.addEventListener("error", function () {
-            const placeholder = document.createElement("div");
-            placeholder.className = "poster-placeholder";
-            placeholder.textContent = "Mehfil & Co. — You're Invited";
-            image.replaceWith(placeholder);
-          });
+      try {
+        if (!supabaseClient) {
+          throw new Error(
+            "Supabase library did not load. Check your internet connection and try again."
+          );
         }
 
-        card.querySelector(".register-button").addEventListener("click", function () {
-          openRegistration(event);
+        // Stop waiting indefinitely if the request does not respond.
+        const result = await Promise.race([
+          supabaseClient
+            .from("events")
+            .select("id,title,description,event_date,event_time,venue,poster_url,status")
+            .eq("status", "published")
+            .order("event_date", { ascending: true }),
+
+          new Promise((_, reject) => {
+            setTimeout(() => {
+              reject(new Error(
+                "Request timed out. Check your internet connection and Supabase project."
+              ));
+            }, 12000);
+          })
+        ]);
+
+        const { data, error } = result;
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        if (!data || data.length === 0) {
+          container.innerHTML =
+            '<p class="empty">No published events found. Please check back soon.</p>';
+          return;
+        }
+
+        const grid = document.createElement("div");
+        grid.className = "events-grid";
+
+        data.forEach(function (event) {
+          const card = document.createElement("article");
+          card.className = "event-card";
+
+          const posterUrl = String(event.poster_url || "");
+          const safePosterUrl = /^https:\/\/\S+$/i.test(posterUrl)
+            ? posterUrl : "";
+
+          const posterMarkup = safePosterUrl
+            ? '<img class="poster" src="' + safeText(safePosterUrl) +
+              '" alt="' + safeText(event.title) +
+              ' event poster" loading="lazy">'
+            : '<div class="poster-placeholder">Mehfil &amp; Co.<br>You’re Invited</div>';
+
+          card.innerHTML =
+            posterMarkup +
+            '<div class="event-info">' +
+              '<div class="date">' +
+                safeText(displayDate(event.event_date)) +
+              '</div>' +
+              '<h3>' + safeText(event.title) + '</h3>' +
+              '<p>' + safeText(event.description || "") + '</p>' +
+              (event.event_time
+                ? '<p class="event-meta"><strong>Time:</strong> ' +
+                  safeText(event.event_time) + '</p>'
+                : '') +
+              (event.venue
+                ? '<p class="event-meta"><strong>Venue:</strong> ' +
+                  safeText(event.venue) + '</p>'
+                : '') +
+              '<button class="button register-button" type="button">' +
+                'REGISTER NOW ↗' +
+              '</button>' +
+            '</div>';
+
+          const image = card.querySelector("img.poster");
+
+          if (image) {
+            image.addEventListener("error", function () {
+              const placeholder = document.createElement("div");
+              placeholder.className = "poster-placeholder";
+              placeholder.textContent = "Mehfil & Co. — You're Invited";
+              image.replaceWith(placeholder);
+            });
+          }
+
+          card.querySelector(".register-button")
+            .addEventListener("click", function () {
+              openRegistration(event);
+            });
+
+          grid.appendChild(card);
         });
 
-        grid.appendChild(card);
-      });
+        container.replaceChildren(grid);
 
-      container.replaceChildren(grid);
+      } catch (error) {
+        console.error("Event loading failed:", error);
+
+        container.innerHTML =
+          '<div class="error">' +
+            '<strong>Could not load events.</strong><br>' +
+            safeText(error.message || "Unknown error") +
+            '<br><button class="button" id="retry-events" type="button">' +
+              'TRY AGAIN' +
+            '</button>' +
+          '</div>';
+
+        document.getElementById("retry-events")
+          .addEventListener("click", loadEvents);
+      }
     }
 
     function openRegistration(event) {
       document.getElementById("event-id").value = event.id;
-      document.getElementById("selected-event-name").textContent = event.title;
+      document.getElementById("selected-event-name").textContent =
+        event.title;
+
       document.getElementById("registration-title").textContent =
         "Register for an event";
+
       message.textContent = "";
       submitButton.disabled = false;
       submitButton.textContent = "REGISTER NOW";
@@ -432,32 +486,45 @@
       message.textContent = "";
     }
 
-    document.getElementById("close-modal").addEventListener("click", closeRegistration);
-    document.getElementById("cancel-registration").addEventListener("click", closeRegistration);
+    document.getElementById("close-modal")
+      .addEventListener("click", closeRegistration);
+
+    document.getElementById("cancel-registration")
+      .addEventListener("click", closeRegistration);
 
     modal.addEventListener("click", function (event) {
-      if (event.target === modal) closeRegistration();
+      if (event.target === modal) {
+        closeRegistration();
+      }
     });
 
     registrationForm.addEventListener("submit", async function (event) {
       event.preventDefault();
 
+      if (!supabaseClient) {
+        message.textContent =
+          "Connection unavailable. Please refresh the website and try again.";
+        return;
+      }
+
       const eventId = document.getElementById("event-id").value;
       const fullName = document.getElementById("full-name").value.trim();
       const email = document.getElementById("email").value.trim();
       const phone = document.getElementById("phone").value.trim();
-      const ticketCount = Number(document.getElementById("ticket-count").value);
+      const ticketCount =
+        Number(document.getElementById("ticket-count").value);
 
       if (!eventId || !fullName || !email || !phone) {
         message.textContent = "Please complete all required fields.";
         return;
       }
 
-      // The SQL table created earlier defines event_id as BIGINT.
+      // event_registrations.event_id was created as BIGINT.
       const numericEventId = Number(eventId);
+
       if (!Number.isSafeInteger(numericEventId) || numericEventId <= 0) {
         message.textContent =
-          "Registration setup needs checking: the event ID must match the registration table.";
+          "Registration setup needs checking: the event ID must be a positive number.";
         return;
       }
 
@@ -470,32 +537,40 @@
       submitButton.textContent = "SUBMITTING...";
       message.textContent = "Submitting your registration...";
 
-      const { error } = await supabaseClient
-        .from("event_registrations")
-        .insert([{
-          event_id: numericEventId,
-          full_name: fullName,
-          email: email,
-          phone: phone,
-          ticket_count: ticketCount
-        }]);
+      try {
+        const { error } = await supabaseClient
+          .from("event_registrations")
+          .insert([{
+            event_id: numericEventId,
+            full_name: fullName,
+            email: email,
+            phone: phone,
+            ticket_count: ticketCount
+          }]);
 
-      submitButton.disabled = false;
-      submitButton.textContent = "REGISTER NOW";
+        if (error) {
+          throw new Error(error.message);
+        }
 
-      if (error) {
+        message.textContent =
+          "Thank you! Your registration has been submitted successfully.";
+
+        registrationForm.reset();
+        document.getElementById("event-id").value = eventId;
+
+      } catch (error) {
         console.error("Registration failed:", error);
         message.textContent =
-          "Registration could not be saved. Please try again later.";
-        return;
-      }
+          "Registration failed: " +
+          (error.message || "Please try again later.");
 
-      message.textContent =
-        "Thank you! Your registration has been submitted successfully.";
-      registrationForm.reset();
-      document.getElementById("event-id").value = eventId;
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "REGISTER NOW";
+      }
     });
 
+    // Start loading events when the page script runs.
     loadEvents();
   </script>
 </body>
