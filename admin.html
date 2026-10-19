@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mehfil & Co | Admin</title>
+  <title>Mehfil &amp; Co | Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; }
@@ -28,6 +28,7 @@
     }
     button.secondary { background: #786d63; }
     button.danger { background: #9a3535; }
+    button:disabled { opacity: .6; }
     .event { border-top: 1px solid #e7ded4; padding: 14px 0; }
     .event img { max-width: 100%; max-height: 220px; object-fit: cover; }
     .muted { color: #766d65; font-size: 14px; }
@@ -38,7 +39,7 @@
 </head>
 <body>
 <main>
-  <h1>Mehfil & Co</h1>
+  <h1>Mehfil &amp; Co</h1>
   <p class="muted">Event management admin panel</p>
   <p id="message" role="status">Connecting…</p>
 
@@ -70,7 +71,7 @@
         <input id="venue" placeholder="Event location">
         <label for="poster">Poster image</label>
         <input id="poster" type="file" accept="image/*">
-        <p class="muted">Choose an image file for the event poster.</p>
+        <p class="muted">Image maximum size: 5 MB.</p>
         <label for="status">Event status</label>
         <select id="status">
           <option value="draft">Draft (not public)</option>
@@ -93,15 +94,16 @@
 
 <script>
 (() => {
+  // Supabase connection settings
   const PROJECT_URL = "https://bxstzctaoknebtcppcfp.supabase.co";
   const PUBLISHABLE_KEY = "sb_publishable_ol8i32LedGKWQeHh5foJwA_so2e665b";
+
   const $ = id => document.getElementById(id);
   const message = text => { $("message").textContent = text; };
 
-  if (!window.supabase ||
-      PROJECT_URL.includes("https://bxstzctaoknebtcppcfp.supabase.co") ||
-      PUBLISHABLE_KEY.includes("sb_publishable_ol8i32LedGKWQeHh5foJwA_so2e665b")) {
-    message("Setup needed: add your Supabase Project URL and Publishable key in the code.");
+  if (!window.supabase) {
+    message("Supabase could not load. Check your internet connection and reload.");
+    $("login").style.display = "block";
     return;
   }
 
@@ -141,22 +143,24 @@
       currentUser = null;
       await db.auth.signOut();
       showLogin();
-      message("Admin access check failed: " + err.message +
-        " Check the admin_users table and its SELECT policy.");
+      message("Admin check failed: " + err.message);
     }
   }
 
   $("loginForm").addEventListener("submit", async e => {
     e.preventDefault();
     message("Signing in…");
+
     const { data, error } = await db.auth.signInWithPassword({
       email: $("email").value.trim(),
       password: $("password").value
     });
+
     if (error) {
       message("Login failed: " + error.message);
       return;
     }
+
     await startSession(data.user);
   });
 
@@ -180,7 +184,11 @@
 
   $("eventForm").addEventListener("submit", async e => {
     e.preventDefault();
-    if (!currentUser) return message("Please sign in again.");
+
+    if (!currentUser) {
+      message("Please sign in again.");
+      return;
+    }
 
     const saveButton = $("eventForm").querySelector('button[type="submit"]');
     saveButton.disabled = true;
@@ -192,21 +200,28 @@
 
       if (file) {
         if (!file.type.startsWith("image/")) {
-          throw new Error("Please choose an image file.");
+          throw new Error("Choose an image file.");
         }
         if (file.size > 5 * 1024 * 1024) {
-          throw new Error("Please choose an image smaller than 5 MB.");
+          throw new Error("The image must be smaller than 5 MB.");
         }
 
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const path = currentUser.id + "/" + Date.now() + "-" + safeName;
+
         const { error: uploadError } = await db.storage
           .from("event-posters")
-          .upload(path, file, { contentType: file.type, upsert: false });
+          .upload(path, file, {
+            contentType: file.type,
+            upsert: false
+          });
 
         if (uploadError) throw uploadError;
 
-        const { data } = db.storage.from("event-posters").getPublicUrl(path);
+        const { data } = db.storage
+          .from("event-posters")
+          .getPublicUrl(path);
+
         posterUrl = data.publicUrl;
       }
 
@@ -233,6 +248,7 @@
       resetForm();
       message("Event saved successfully.");
       await loadEvents();
+
     } catch (err) {
       message("Could not save event: " + err.message);
     } finally {
@@ -242,6 +258,7 @@
 
   async function loadEvents() {
     $("eventsList").textContent = "Loading events…";
+
     const { data, error } = await db
       .from("events")
       .select("*")
@@ -269,7 +286,9 @@
 
       const details = document.createElement("p");
       details.textContent = [
-        event.event_date, event.event_time, event.venue,
+        event.event_date,
+        event.event_time,
+        event.venue,
         "Status: " + event.status
       ].filter(Boolean).join(" • ");
       card.appendChild(details);
@@ -310,12 +329,17 @@
       del.className = "danger";
       del.addEventListener("click", async () => {
         if (!confirm("Delete this event? This cannot be undone.")) return;
+
         const { error: deleteError } = await db
-          .from("events").delete().eq("id", event.id);
+          .from("events")
+          .delete()
+          .eq("id", event.id);
+
         if (deleteError) {
           message("Could not delete event: " + deleteError.message);
           return;
         }
+
         message("Event deleted.");
         await loadEvents();
       });
@@ -326,11 +350,13 @@
 
   (async () => {
     const { data, error } = await db.auth.getSession();
+
     if (error) {
       showLogin();
       message("Could not check session: " + error.message);
       return;
     }
+
     if (data.session) {
       await startSession(data.session.user);
     } else {
