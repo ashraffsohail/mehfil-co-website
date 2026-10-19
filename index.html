@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f4ec">
+  <title>Mehfil & Co. | Moments That Bring Us Together</title>
+  <meta name="description" content="Discover memorable gatherings, experiences and upcoming events with Mehfil & Co.">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Georgia, 'Times New Roman', serif; background: #f7f4ec; color: #25291e; }
+    header { padding: 22px 7%; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #dedbcc; }
+    .logo { font-size: 25px; font-weight: bold; letter-spacing: -1px; }
+    .logo span { color: #78805a; }
+    nav a { color: #34392b; text-decoration: none; margin-left: 24px; font: 13px Arial, sans-serif; }
+    .hero { padding: 85px 7% 75px; background: #e9e8d9; }
+    .eyebrow { font: 11px Arial, sans-serif; letter-spacing: 3px; text-transform: uppercase; color: #68704b; }
+    h1 { font-size: clamp(44px, 8vw, 88px); font-weight: normal; line-height: 1.02; max-width: 800px; margin: 25px 0; letter-spacing: -3px; }
+    h1 em { color: #78805a; }
+    .intro { max-width: 470px; font: 16px/1.8 Arial, sans-serif; color: #5f6155; }
+    .button { display: inline-block; margin-top: 22px; padding: 15px 24px; background: #343b2b; color: white; text-decoration: none; font: 12px Arial, sans-serif; letter-spacing: 1px; }
+    section { padding: 65px 7%; }
+    .section-title { font-size: 39px; font-weight: normal; margin: 14px 0; }
+    .about { max-width: 660px; font: 15px/1.9 Arial, sans-serif; color: #65665b; }
+    .event { display: grid; grid-template-columns: 1fr 1fr; gap: 35px; align-items: center; margin-top: 30px; }
+    .event-art { min-height: 300px; background: #d8dac6; display: flex; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+    .event-art div { border: 1px solid #81886a; padding: 40px 22px; width: 100%; }
+    .event-art p { font: 11px Arial, sans-serif; letter-spacing: 3px; }
+    .event-art h3 { font-size: 42px; font-weight: normal; margin: 18px 0; }
+    .event-copy p { font: 14px/1.8 Arial, sans-serif; color: #65665b; }
+    .date { color: #78805a !important; font-size: 12px !important; letter-spacing: 2px; text-transform: uppercase; }
+    .note { padding: 24px; background: #eeece2; font: 13px/1.8 Arial, sans-serif; color: #696a60; }
+    footer { padding: 32px 7%; background: #343b2b; color: #f7f4ec; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font: 12px Arial, sans-serif; }
+    @media (max-width: 650px) {
+      header { padding: 20px 5%; }
+      nav a { margin-left: 10px; font-size: 11px; }
+      .hero { padding: 65px 6%; }
+      section { padding: 50px 6%; }
+      .event { grid-template-columns: 1fr; }
+      h1 { letter-spacing: -2px; }
+      .section-title { font-size: 33px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Mehfil <span>&</span> Co.</div>
+    <nav>
+      <a href="#about">Our Story</a>
+      <a href="#events">Events</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="eyebrow">Gather. Connect. Celebrate.</div>
+      <h1>Some moments<br>deserve to be <em>shared.</em></h1>
+      <p class="intro">A space for people, stories and experiences that bring us closer. Welcome to Mehfil & Co.</p>
+      <a class="button" href="#events">DISCOVER OUR EVENTS ↗</a>
+    </div>
+
+    <section id="about">
+      <div class="eyebrow">A little about us</div>
+      <h2 class="section-title">More than an event.<br>A feeling.</h2>
+      <p class="about">We believe the best memories begin when people come together. Mehfil & Co. creates spaces for meaningful connections, shared experiences and moments worth remembering.</p>
+    </section>
+
+    <section id="events">
+      <div class="eyebrow">Save the date</div>
+      <h2 class="section-title">The next gathering</h2>
+      <div class="event">
+        <div class="event-art">
+          <div>
+            <p>MEHFIL & CO. PRESENTS</p>
+            <h3>You're Invited</h3>
+            <p>31 OCTOBER 2026</p>
+          </div>
+        </div>
+        <div class="event-copy">
+          <p class="date">Saturday · 31 October 2026</p>
+          <h2 class="section-title">Our First Mehfil</h2>
+          <p>Something special is coming. Join us for a gathering made for connection, conversation and memorable moments.</p>
+          <p>Event timing, venue and registration details will be announced soon.</p>
+          <a class="button" href="mailto:hello@mehfilandco.com?subject=Mehfil%20%26%20Co%20Event%20Enquiry">MAKE AN ENQUIRY ↗</a>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="note">Stay connected with Mehfil & Co. More event details will be shared soon.</div>
+    </section>
+  </main>
+
+  <footer>
+    <div>© 2026 Mehfil & Co.</div>
+    <div>Made for moments that matter.</div>
+  </footer>
+</body>
+</html>
